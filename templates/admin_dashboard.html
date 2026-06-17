@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — EconCore</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:#0a0b0e;color:#e8eaf0}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:#12141a}
+    ::-webkit-scrollbar-thumb{background:#d4a843;border-radius:3px}
+    .dash{display:flex;min-height:100vh}
+    .sidebar{width:240px;background:rgba(0,0,0,.4);border-right:1px solid rgba(255,255,255,.04);padding:24px;position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+    .sidebar h2{font-size:1.2rem;font-weight:800;background:linear-gradient(135deg,#d4a843,#f0d080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:24px}
+    .sidebar a{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;color:#7a8090;text-decoration:none;font-size:.85rem;transition:all .3s;margin-bottom:4px}
+    .sidebar a:hover,.sidebar a.active{background:rgba(212,168,67,.08);color:#d4a843}
+    .sidebar .logout{margin-top:32px;border-top:1px solid rgba(255,255,255,.04);padding-top:16px;color:#e74c3c}
+    .sidebar .logout:hover{background:rgba(231,76,60,.08);color:#e74c3c}
+    .main{margin-left:240px;flex:1;padding:32px}
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}
+    .header h1{font-size:1.6rem;font-weight:800}
+    .header h1 span{color:#d4a843}
+    .header .user-info{font-size:.85rem;color:#7a8090}
+    .section{margin-bottom:48px}
+    .section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .section-title h3{font-size:1.1rem;font-weight:700}
+    .section-title h3 i{color:#d4a843;margin-right:8px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;font-weight:600;font-size:.8rem;transition:all .3s;cursor:pointer;border:none;text-decoration:none}
+    .btn-add{background:rgba(212,168,67,.12);color:#d4a843;border:1px solid rgba(212,168,67,.2)}
+    .btn-add:hover{background:#d4a843;color:#0a0b0e}
+    .btn-danger{background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.2)}
+    .btn-danger:hover{background:#e74c3c;color:#fff}
+    .btn-sm{padding:4px 12px;font-size:.72rem}
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+    .card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;transition:all .3s}
+    .card:hover{border-color:rgba(212,168,67,.15);background:rgba(255,255,255,.04)}
+    .card h4{font-size:.95rem;font-weight:600;margin-bottom:4px}
+    .card .cat{font-size:.68rem;color:#d4a843;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+    .card p{font-size:.78rem;color:#7a8090;line-height:1.5;margin-bottom:10px}
+    .card .meta{font-size:.7rem;color:#5a6070;margin-bottom:10px}
+    .card .actions{display:flex;gap:6px}
+    .flash-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+    .flash-msg{padding:12px 20px;border-radius:8px;font-size:.85rem;font-weight:500;animation:slideIn .3s ease}
+    .flash-msg.success{background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.2);color:#2ecc71}
+    .flash-msg.error{background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.2);color:#e74c3c}
+    @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+    .modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.8);align-items:center;justify-content:center;padding:20px}
+    .modal.show{display:flex}
+    .modal-content{background:#15171e;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:32px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto}
+    .modal-content h3{font-size:1.2rem;font-weight:700;margin-bottom:20px;color:#d4a843}
+    .modal-content form{display:flex;flex-direction:column;gap:12px}
+    .modal-content input,.modal-content textarea,.modal-content select{padding:12px 16px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:#e8eaf0;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:all .3s}
+    .modal-content input:focus,.modal-content textarea:focus{border-color:#d4a843}
+    .modal-content textarea{min-height:80px;resize:vertical}
+    .modal-content .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .modal-content .btn-submit{padding:12px;border-radius:10px;background:linear-gradient(135deg,#d4a843,#b8862a);color:#0a0b0e;font-weight:700;font-size:.95rem;border:none;cursor:pointer;transition:all .3s}
+    .modal-content .btn-submit:hover{transform:translateY(-2px)}
+    .modal-close{float:right;font-size:1.2rem;color:#7a8090;cursor:pointer;transition:color .3s}
+    .modal-close:hover{color:#d4a843}
+    .empty-state{text-align:center;padding:40px;color:#5a6070;font-size:.9rem}
+    .empty-state i{font-size:2rem;margin-bottom:12px;opacity:.4}
+    @media(max-width:768px){
+      .sidebar{width:60px;padding:12px 8px}
+      .sidebar h2{font-size:.8rem;text-align:center}
+      .sidebar a span{display:none}
+      .sidebar a{justify-content:center;padding:10px 0}
+      .main{margin-left:60px;padding:16px}
+      .modal-content{padding:20px}
+      .modal-content .form-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <!-- Flash Messages -->
+  <div class="flash-wrap" id="flashWrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-msg {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>EconCore</h2>
+    <a href="#section-projects" class="active" onclick="smoothScroll(event,'section-projects')"><i class="fas fa-flask"></i><span>Projects</span></a>
+    <a href="#section-podcasts" onclick="smoothScroll(event,'section-podcasts')"><i class="fas fa-microphone"></i><span>Podcasts</span></a>
+    <a href="#section-blogs" onclick="smoothScroll(event,'section-blogs')"><i class="fas fa-newspaper"></i><span>Blogs</span></a>
+    <a href="#section-initiatives" onclick="smoothScroll(event,'section-initiatives')"><i class="fas fa-lightbulb"></i><span>Initiatives</span></a>
+    <a href="/" class="logout" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.04);padding-top:16px"><i class="fas fa-arrow-left"></i><span>Back to Site</span></a>
+    <a href="/admin/logout" class="logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="header">
+      <h1>Welcome back, <span>{{ current_user.username }}</span></h1>
+      <div class="user-info">{{ projects|length }} Projects · {{ podcasts|length }} Podcasts · {{ blogs|length }} Blogs</div>
+    </div>
+
+    <!-- ====== PROJECTS ====== -->
+    <div class="section" id="section-projects">
+      <div class="section-title">
+        <h3><i class="fas fa-flask"></i> Research Projects</h3>
+        <button class="btn btn-add" onclick="openModal('projectModal')"><i class="fas fa-plus"></i> Add Project</button>
+      </div>
+      {% if projects %}
+      <div class="card-grid">
+        {% for p in projects %}
+        <div class="card">
+          <div class="cat">{{ p.category }}</div>
+          <h4>{{ p.title }}</h4>
+          <p>{{ p.description[:120] }}{% if p.description|length > 120 %}...{% endif %}</p>
+          <div class="meta"><i class="far fa-calendar"></i> {{ p.date }} · {{ p.lead_author }}</div>
+          <div class="actions">
+            <a href="/admin/project/delete/{{ p.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this project?')"><i class="fas fa-trash"></i> Delete</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-flask"></i><p>No projects yet. Click "Add Project" to get started!</p></div>
+      {% endif %}
+    </div>
+
+    <!-- ====== PODCASTS ====== -->
+    <div class="section" id="section-podcasts">
+      <div class="section-title">
+        <h3><i class="fas fa-microphone"></i> Podcasts</h3>
+        <button class="btn btn-add" onclick="openModal('podcastModal')"><i class="fas fa-plus"></i> Add Podcast</button>
+      </div>
+      {% if podcasts %}
+      <div class="card-grid">
+        {% for p in podcasts %}
+        <div class="card">
+          <div class="cat">Ep. {{ p.episode_number }}</div>
+          <h4>{{ p.title }}</h4>
+          <p>{{ p.description[:120] }}{% if p.description|length > 120 %}...{% endif %}</p>
+          <div class="meta"><i class="far fa-clock"></i> {{ p.duration }} · {{ p.date }}</div>
+          <div class="actions">
+            <a href="/admin/podcast/delete/{{ p.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this podcast?')"><i class="fas fa-trash"></i> Delete</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-microphone"></i><p>No podcasts yet. Click "Add Podcast" to get started!</p></div>
+      {% endif %}
+    </div>
+
+    <!-- ====== BLOGS ====== -->
+    <div class="section" id="section-blogs">
+      <div class="section-title">
+        <h3><i class="fas fa-newspaper"></i> Blogs & Publications</h3>
+        <button class="btn btn-add" onclick="openModal('blogModal')"><i class="fas fa-plus"></i> Add Blog</button>
+      </div>
+      {% if blogs %}
+      <div class="card-grid">
+        {% for b in blogs %}
+        <div class="card">
+          <div class="cat">{{ b.category }}</div>
+          <h4>{{ b.title }}</h4>
+          <p>{{ b.description[:120] }}{% if b.description|length > 120 %}...{% endif %}</p>
+          <div class="meta">{{ b.author_name }} · {{ b.read_time }} · {{ b.date }}</div>
+          <div class="actions">
+            <a href="/admin/blog/delete/{{ b.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this blog?')"><i class="fas fa-trash"></i> Delete</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-newspaper"></i><p>No blogs yet. Click "Add Blog" to get started!</p></div>
+      {% endif %}
+    </div>
+
+    <!-- ====== INITIATIVES ====== -->
+    <div class="section" id="section-initiatives">
+      <div class="section-title">
+        <h3><i class="fas fa-lightbulb"></i> Initiatives</h3>
+        <button class="btn btn-add" onclick="openModal('initiativeModal')"><i class="fas fa-plus"></i> Add Initiative</button>
+      </div>
+      {% if initiatives %}
+      <div class="card-grid">
+        {% for i in initiatives %}
+        <div class="card">
+          <h4><i class="fas {{ i.icon }}" style="color:#d4a843;margin-right:6px"></i> {{ i.title }}</h4>
+          <p>{{ i.description[:120] }}{% if i.description|length > 120 %}...{% endif %}</p>
+          <div class="actions">
+            <a href="/admin/initiative/delete/{{ i.id }}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this initiative?')"><i class="fas fa-trash"></i> Delete</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-lightbulb"></i><p>No initiatives yet. Click "Add Initiative" to get started!</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ====== MODALS ====== -->
+
+  <!-- Project Modal -->
+  <div class="modal" id="projectModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal('projectModal')"><i class="fas fa-times"></i></span>
+      <h3><i class="fas fa-flask" style="margin-right:8px"></i> New Research Project</h3>
+      <form action="/admin/project/add" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Project Title" required />
+        <input type="text" name="category" placeholder="Category (e.g. Macroeconomics)" value="Macroeconomics" />
+        <textarea name="description" placeholder="Project description..." required></textarea>
+        <div class="form-row">
+          <input type="text" name="lead_author" placeholder="Lead Author" value="Research Team" />
+          <input type="text" name="page_count" placeholder="Page Count" value="N/A" />
+        </div>
+        <div class="form-row">
+          <input type="text" name="date" placeholder="Date (e.g. Jun 2025)" />
+          <input type="text" name="video_url" placeholder="YouTube/Vimeo URL (optional)" />
+        </div>
+        <div class="form-row">
+          <div><label style="font-size:.75rem;color:#7a8090;display:block;margin-bottom:4px">Thumbnail Image</label><input type="file" name="thumbnail" accept="image/*" /></div>
+          <div><label style="font-size:.75rem;color:#7a8090;display:block;margin-bottom:4px">PDF / Document</label><input type="file" name="file" /></div>
+        </div>
+        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Project</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Podcast Modal -->
+  <div class="modal" id="podcastModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal('podcastModal')"><i class="fas fa-times"></i></span>
+      <h3><i class="fas fa-microphone" style="margin-right:8px"></i> New Podcast Episode</h3>
+      <form action="/admin/podcast/add" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Episode Title" required />
+        <textarea name="description" placeholder="Episode description..." required></textarea>
+        <div class="form-row">
+          <input type="number" name="episode_number" placeholder="Episode Number" value="1" />
+          <input type="text" name="duration" placeholder="Duration (e.g. 30 min)" value="30 min" />
+        </div>
+        <input type="text" name="date" placeholder="Date (e.g. Jun 17, 2025)" />
+        <div class="form-row">
+          <div><label style="font-size:.75rem;color:#7a8090;display:block;margin-bottom:4px">Cover Art</label><input type="file" name="cover_image" accept="image/*" /></div>
+          <div><label style="font-size:.75rem;color:#7a8090;display:block;margin-bottom:4px">Audio File (MP3)</label><input type="file" name="audio_file" accept="audio/*" /></div>
+        </div>
+        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Podcast</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Blog Modal -->
+  <div class="modal" id="blogModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal('blogModal')"><i class="fas fa-times"></i></span>
+      <h3><i class="fas fa-newspaper" style="margin-right:8px"></i> New Blog Post</h3>
+      <form action="/admin/blog/add" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Blog Title" required />
+        <input type="text" name="category" placeholder="Category (e.g. Monetary Policy)" value="Economics" />
+        <textarea name="description" placeholder="Blog content / excerpt..." required></textarea>
+        <div class="form-row">
+          <input type="text" name="author_name" placeholder="Author Name" value="Staff Writer" />
+          <input type="text" name="author_initials" placeholder="Initials (e.g. SW)" value="SW" />
+        </div>
+        <div class="form-row">
+          <input type="text" name="read_time" placeholder="Read Time (e.g. 5 min read)" value="5 min read" />
+          <input type="text" name="date" placeholder="Date (e.g. Jun 2025)" />
+        </div>
+        <div><label style="font-size:.75rem;color:#7a8090;display:block;margin-bottom:4px">Featured Image</label><input type="file" name="image" accept="image/*" /></div>
+        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Blog</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Initiative Modal -->
+  <div class="modal" id="initiativeModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal('initiativeModal')"><i class="fas fa-times"></i></span>
+      <h3><i class="fas fa-lightbulb" style="margin-right:8px"></i> New Initiative</h3>
+      <form action="/admin/initiative/add" method="POST">
+        <input type="text" name="title" placeholder="Initiative Title" required />
+        <textarea name="description" placeholder="Initiative description..." required></textarea>
+        <input type="text" name="icon" placeholder="FontAwesome Icon (e.g. fa-chart-bar)" value="fa-chart-bar" />
+        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Initiative</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Modal functions
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    // Close modals on overlay click
+    document.querySelectorAll('.modal').forEach(m => {
+      m.addEventListener('click', function(e) { if(e.target === this) this.classList.remove('show'); });
+    });
+
+    // Smooth scroll for sidebar
+    function smoothScroll(e, id) {
+      e.preventDefault();
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Auto-hide flash messages
+    setTimeout(() => {
+      document.querySelectorAll('.flash-msg').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(100%)';
+        el.style.transition = 'all .5s';
+        setTimeout(() => el.remove(), 500);
+      });
+    }, 4000);
+  </script>
+</body>
+          </html>
