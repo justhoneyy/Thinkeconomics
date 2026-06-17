@@ -257,7 +257,7 @@ with app.app_context():
     if not AdminUser.query.filter_by(username='admin').first():
         admin = AdminUser(
             username='admin',
-            password_hash=generate_password_hash('admin123')
+            password_hash=generate_password_hash('Adminthinking123')
         )
         db.session.add(admin)
         db.session.commit()
